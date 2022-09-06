@@ -1,0 +1,166 @@
+" -----------------------------------------------------------------------------
+" Plugins: {{{
+set nocompatible
+filetype off
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'preservim/nerdtree'
+" let Vundle manage Vundle
+Plugin 'gmarik/Vundle.vim'
+Plugin 'Valloric/MatchTagAlways'
+Plugin 'bling/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+"Plugin 'Yggdroot/indentLine'
+Plugin 'NLKNguyen/papercolor-theme'
+Plugin 'scrooloose/syntastic'
+Plugin 'tpope/vim-surround'
+Plugin 'nanotech/jellybeans.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'tpope/vim-fugitive'
+Plugin 'hdima/python-syntax'
+"Plugin 'ngthanhtrung23/vim-markdown'
+Plugin 'ngthanhtrung23/vim-comment'
+Plugin 'nvie/vim-flake8'
+"Plugin 'ngthanhtrung23/vim-extended-bash'
+"Plugin 'Valloric/YouCompleteMe'
+Plugin 'junegunn/vim-easy-align'
+Plugin 'mileszs/ack.vim'
+Plugin 'christoomey/vim-tmux-navigator'
+Plugin 'tpope/vim-repeat'
+
+call vundle#end()
+filetype plugin indent on
+" Start NERDTree and leave the cursor in it.
+" autocmd VimEnter * NERDTree
+" Start NERDTree and put the cursor back in the other window.
+" autocmd VimEnter * NERDTree | wincmd p
+" vim-airline
+nnoremap <leader>n :NERDTreeFocus<CR>
+nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-f> :NERDTreeFind<CR>
+
+let g:ycm_autoclose_preview_window_after_completion=1
+map <leader>g  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+" Always show statusline
+set laststatus=2
+" Use 256 colours (Use this setting only if your terminal supports 256 colours)
+set t_Co=256
+
+" Stuffs that should be set by default: {{{
+syntax on
+set softtabstop=4
+set tabstop=4
+set expandtab
+set shiftwidth=4
+
+set nocompatible            " use new features whenever they are available
+set bs=2                    " backspace should work as we expect
+set autoindent
+set history=50              " remember last 50 commands
+set ruler                   " show cursor position in bottom line
+set nu                      " show line number
+set hlsearch                " highlight search result
+" y and d put stuff into system clipboard (so that other apps can see it)
+set clipboard=unnamed,unnamedplus
+"set mouse=a                " enable mouse. At least this should work for iTerm
+set textwidth=0
+" Open new split to right / bottom
+set splitbelow
+set splitright
+" Automatically update changed files (but need to focus on the file)
+set autoread
+set foldmethod=indent
+set foldlevel=20
+" Disable Ex mode.
+nnoremap Q <Nop>
+" Copy multiple times: gv to reselect and y to copy again.
+xnoremap p pgvy
+autocmd vimenter * DoMatchParen
+autocmd vimenter * colorscheme PaperColor
+" jellybeans
+set background=dark
+colorscheme PaperColor 
+" color jellybeans    " set background=dark for other machine, but use jellybeans in my computer
+" }}}
+
+function! MyTabCompletion()
+  if col('.')>1 && strpart( getline('.'), col('.')-2, 3 ) =~ '^\w'
+    return "\<C-P>"
+  else
+    return "\<Tab>"
+  endif
+endfunction
+inoremap <Tab> <C-R>=MyTabCompletion()<CR>
+" <Tab> at the end of a word should attempt to complete it using tokens from the current file: {{{
+
+" C/C++:
+function! CSET()
+    set makeprg=if\ \[\ -f\ \"Makefile\"\ \];then\ make\ $*;else\ if\ \[\ -f\ \"makefile\"\ \];then\ make\ $*;else\ gcc\ -O2\ -g\ -Wall\ -Wextra\ -o%.bin\ %\ -lm;fi;fi
+    set cindent
+    set nowrap
+endfunction
+
+function! CPPSET()
+    set makeprg=if\ \[\ -f\ \"Makefile\"\ \];then\ make\ $*;else\ if\ \[\ -f\ \"makefile\"\ \];then\ make\ $*;else\ g++\ -std=gnu++0x\ -O2\ -g\ -Wall\ -Wextra\ -o\ %<\ %;fi;fi
+    set cindent
+    set nowrap
+    nnoremap <buffer> <F9> :w<cr>:!g++ -O2 % -o %< -std=c++11 -I ./<cr>:!./%<<cr>
+    nnoremap <buffer> <F8> :w<cr>:!g++ -Wall -Wextra -Wshadow -O2 % -o %< -std=c++11 -I ./<cr>
+endfunction
+
+" Java
+function! JAVASET()
+    set makeprg=if\ \[\ -f\ \"Makefile\"\ \];then\ make\ $*;else\ if\ \[\ -f\ \"makefile\"\ \];then\ make\ $*;else\ javac\ -g\ %;fi;fi
+    set cindent
+    set nowrap
+    nnoremap <buffer> <F8> :w<cr>:!javac %<cr>
+    nnoremap <buffer> <F9> :w<cr>:!javac %<cr>:!java %< %<cr>
+endfunction
+
+" vim scripts
+function! VIMSET()
+    set nowrap
+    set tabstop=2
+    set softtabstop=2
+    set shiftwidth=2
+endfunction
+
+" Python
+function! PYSET()
+    if exists('g:no_pyset')
+        return
+    endif
+    set nowrap
+
+    set autoindent
+    set expandtab
+    set shiftwidth=4
+    set tabstop=4
+    nnoremap <buffer> <F9> :w<cr>:exec '!clear;python' shellescape(@%, 1)<cr>
+endfunction
+
+" Autocommands for all languages:
+autocmd BufNewFile,BufReadPost *.py2 set filetype=python
+autocmd FileType vim        call VIMSET()
+autocmd FileType c          call CSET()
+autocmd FileType C          call CPPSET()
+autocmd FileType cc         call CPPSET()
+autocmd FileType cpp        call CPPSET()
+autocmd FileType java       call JAVASET()
+autocmd FileType python     call PYSET()
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_python_python_exec = '/usr/bin/python3'
+
+let g:onedark_termcolors = 256
+" Hack to make bg black with jellybeans
+" hi Normal ctermbg=none
+" hi LineNr ctermbg=none
+" hi NonText ctermbg=none
+let g:pymode_python = 'python3'
